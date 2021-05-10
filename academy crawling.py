@@ -12,13 +12,17 @@ CSS selector
 - tag1 + tag2 => 형제(다음노드) => tag2
 - a:nth-of-type()
 """
-
+#%%
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from selenium.webdriver.support import expected_conditions as EC 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import re
+import pandas as pd
+
+#%%
+# driver.close()
 
 
 url = 'http://awardsdatabase.oscars.org/'
@@ -67,32 +71,162 @@ driver.find_elements_by_css_selector('button#btnbasicsearch')[0].click()
 
 
 
-###############
+
+
+
+#%%
+
+
+
+
 prizename = []
-movname = []
-#%%
+nominationstatement = []
+films = []
+win = []
+charactor = []
+songtitle = []
+
 dom = BeautifulSoup(driver.page_source, 'html.parser')
-for box in dom.select('div.result-subgroup.subgroup-awardcategory-chron'):
-    prize_name = box.select_one('.result-subgroup-title').text.strip()
-    print(f'prize name : {prize_name}')
-    print()
-    for candidate in box.select('.result-details.awards-result-actingorsimilar'):
-        c_name = candidate.select_one('.awards-result-nominationstatement').text.strip()
-        print(f'candidate name : {c_name}')
-        c_info1 = candidate.select_one('.awards-result-film').text.strip()
-        print(f'info1 : {c_info1}')
-        if candidate.select_one('.awards-result-character'):
-            c_info2 = candidate.select_one('.awards-result-character').text.strip()
-            print(f'info2 : {c_info2}')
-        print()
+for prize in dom.select('div.result-subgroup.subgroup-awardcategory-chron'):
+    
+    # prize_name
+    pnm = prize.select_one('.result-subgroup-title').text.strip()
+    print(f'prize name : {pnm}')
+
+    
+    nominationst = ''
+    film_title = ''
+    chrt = ''
+    songt = ''
+    
+    
+    # 후보 구분자 class : actingorsimilar : 후보이름(사람)-상영작 {작품이름}의 경우, 각 candidate구분자
+    if prize.select('.result-details.awards-result-actingorsimilar'):
+        print('actingorsimilar 유형\n')
+        
+        # 후보들 for문
+        for candidate in prize.select('.result-details.awards-result-actingorsimilar'):
+
+            # nomination statement ex) 최우식
+            nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
+            print(f'nominationstatement : {nominationst}')
+
+            # film info1 ex) Parasite
+            film_title = candidate.select_one('.awards-result-film').text.strip()
+            print(f'film_title : {film_title}')
+
+            # character ex) 기우역
+            if candidate.select_one('.awards-result-character'):
+                chrt = candidate.select_one('.awards-result-character').text.strip()
+                print(f'character : {chrt}')
+            
+            # winner 여부
+            if candidate.select_one('span'):
+                winornot = 1
+                print('winner+++++++++')
+            else:
+                winornot = 0
+                
+            prizename.append(pnm)
+            nominationstatement.append(nominationst)
+            films.append(film_title)
+            charactor.append(chrt)
+            songtitle.append(songt)
+            win.append(winornot)
+
+
+            print()
+
+        
+    # 후보 구분자 class : other : 작품이름-사람이름의 경우, 각 candidate구분자
+    elif prize.select('.result-details.awards-result-other'):
+        print('other 유형\n')
+        
+        # 후보들 for문
+        for candidate in prize.select('.result-details.awards-result-other'):
+            
+            # nomination statement
+            nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
+            print(f'nominationstatement : {nominationst}')
+            
+            # film_title
+            film_title = candidate.select_one('.awards-result-film a').text.strip()
+            print(f'film_title : {film_title}')
+
+            # winner 여부
+            if candidate.select_one('span'):
+                winornot = 1
+                print('winner+++++++++')
+            else:
+                winornot = 0
+                
+            print()
+            
+            prizename.append(pnm)
+            nominationstatement.append(nominationst)
+            films.append(film_title)
+            charactor.append(chrt)
+            songtitle.append(songt)
+            win.append(winornot)
+    
+    # 후보 구분자 class : song (주제가상)
+    elif prize.select('.result-details.awards-result-song'):
+        print('song 유형\n')
+        
+        # 후보들 for문
+        for candidate in prize.select('.result-details.awards-result-song'):
+            
+            # nomination statement
+            nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
+            print(f'nominationstatement : {nominationst}')
+            
+            # film_title
+            film_title = candidate.select_one('.awards-result-film a').text.strip()
+            print(f'film_title : {film_title}')
+            
+            # song title
+            songt = candidate.select_one('.awards-result-songtitle').text.strip()
+            print(f'song_title : {songt}')
+            
+            # winner 여부
+            if candidate.select_one('span'):
+                winornot = 1
+                print('winner+++++++++')
+            else:
+                winornot = 0
+                
+            prizename.append(pnm)
+            nominationstatement.append(nominationst)
+            films.append(film_title)
+            charactor.append(chrt)
+            songtitle.append(songt)
+            win.append(winornot)
+                
+            print()
+        
+        
+        
+        
+        
+        
+        
     print('***********************************')
-    
-    
+
+
+#%%
+df = pd.DataFrame({
+    'prizename': prizename,
+    'nominationstatement': nominationstatement,
+    'films': films,
+    'charactor': charactor,
+    'songtitle': songtitle,
+    'win': win
+})
+
 
 #%%
 
-
-# box
+# box = prize
 <div class="result-subgroup subgroup-awardcategory-chron">
     
 
@@ -108,23 +242,38 @@ for box in dom.select('div.result-subgroup.subgroup-awardcategory-chron'):
     # candidate
     <div class="awards-result-subgroup-items">
         
+        # 수상작일때
+        <span class="glyphicon glyphicon-star" title="Winner"></span>
+    
+    
         # 후보1
-        <div class="result-details awards-result-actingorsimilar">
+        <div class="result-details awards-result-actingorsimilar">------------------------------
         
-            # 후보1의 정보들
+            # 후보1의 정보들***************************************************************
             <div class="awards-result-nomination awards-result-nomination-actingorsimilar">
+                
+                # 후보 이름+++++++++++++++++++++++++++++++++++++
                 <div class="awards-result-nominationstatement">
                 후보 이름
                 </div>
+                # 후보 이름+++++++++++++++++++++++++++++++++++++
+                
                 <div class="awards-result-film">
                 후보 정보
                 </div>
+                
                 <div class="awards-result-character">
                 후보정보2
                 </div>
+                
             </div>
-        </div> # 후보1
-
+            # 후보1의 정보들***************************************************************
+            
+        </div>--------------------------------------------------------------------------------
+        # 후보1
+        
+        
+    
         # 후보2
         <div class="result-details awards-result-actingorsimilar">
         </div>
@@ -147,9 +296,10 @@ for box in dom.select('div.result-subgroup.subgroup-awardcategory-chron'):
 #%%
 Animated Feature film
 
+# box = prize
 <div class="result-subgroup subgroup-awardcategory-chron">
 
-    # 상 이름
+    # prize name
     <div class="result-subgroup-header">
         <div class="result-subgroup-title">
             <a class="nominations-link">ANIMATED FEATURE FILM</a> # 상 제목
@@ -160,21 +310,39 @@ Animated Feature film
     <div class="awards-result-subgroup-items"> 
     
         # 후보1
-        <div class="result-details awards-result-other">
+        <div class="result-details awards-result-other">--------------------------------------------
+        
+        
+            # 수상작일때
+            <span class="glyphicon glyphicon-star" title="Winner"></span>
+        
+        
+            # 후보1의 정보들*************************************************************************
             <div class="awards-result-nomination awards-result-nomination-other">
             
+                
                 <div class="awards-result-film">
+                    
+                    # 후보 이름+++++++++++++++++++++++++++++++
                     <div class="awards-result-film-title">
                         <a class="nominations-link">Onward</a> # 후보 이름
                     </div>
+                    # 후보 이름+++++++++++++++++++++++++++++++
+                    
                 </div>
                 
+                
+                #후보 정보
                 <div class="awards-result-nominationstatement">
-                    <a class="nominations-link">Dan Scanlon and Kori Rae</a> #후보 정보1
+                    <a class="nominations-link">Dan Scanlon and Kori Rae</a> 
                 </div>
+                #후보 정보
+                
                 
             </div>
-        </div> # 후보1
+            # 후보1의 정보들*************************************************************************
+            
+        </div> # 후보1---------------------------------------------------------------------------------
         
         # 후보2
         <div class="result-details awards-result-other">
