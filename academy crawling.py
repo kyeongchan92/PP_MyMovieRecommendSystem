@@ -21,7 +21,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import re
 import pandas as pd
 
-#%%
+#%% 켜기, 초기화
 # driver.close()
 
 
@@ -34,197 +34,238 @@ wait = WebDriverWait(driver,40)
 driver.get(url)
 
 # driver.close()
+#%% 연도설정
 
-wantfromy = 2020
-wanttoy = 2020
+def move_year(y):
+   
+    # 화면 최대화
+    # driver.maximize_window()
+    
+    # from year dropdown 클릭
+    drop_down_click = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.row-search-delimiters button:nth-of-type(1)")))
+    drop_down_click.click()
+    
 
-# 화면 최대화
-# driver.maximize_window()
-
-# from year dropdown 클릭
-drop_down_click = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.row-search-delimiters button:nth-of-type(1)")))
-drop_down_click.click()
-
-
-# from year dropdown 연도 클릭
-for _ in driver.find_elements_by_css_selector(
-    'div#basicsearch div.row-search-delimiters div.control-multiselect-showyear:nth-of-type(1) ul li'):
-    if str(wantfromy) in _.text:
-        _.click()
-
-
-# to year dropdown 클릭
-# 화면이 좁아져서 from year의 dropdown이 to year를 가리면 안된다.
-drop_down_click = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.row-search-delimiters div.control-multiselect-showyear:nth-of-type(2) button")))
-drop_down_click.click()
-for _ in driver.find_elements_by_css_selector(
-    'div#basicsearch div.row-search-delimiters div.control-multiselect-showyear:nth-of-type(2) ul li'):
-    if str(wanttoy) in _.text:
-        _.click()
-
-
-# search 버튼 클릭
-driver.find_elements_by_css_selector('button#btnbasicsearch')[0].click()
-
-
-
-
-
-
-
+    # from year dropdown 연도 클릭
+    for _ in driver.find_elements_by_css_selector(
+        'div#basicsearch div.row-search-delimiters div.control-multiselect-showyear:nth-of-type(1) ul li'):
+        if str(y) in _.text:
+            _.click()
+    
+    
+    # to year dropdown 클릭
+    # 화면이 좁아져서 from year의 dropdown이 to year를 가리면 안된다.
+    drop_down_click = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.row-search-delimiters div.control-multiselect-showyear:nth-of-type(2) button")))
+    drop_down_click.click()
+    for _ in driver.find_elements_by_css_selector(
+        'div#basicsearch div.row-search-delimiters div.control-multiselect-showyear:nth-of-type(2) ul li'):
+        if str(y) in _.text:
+            _.click()
+    
+    
+    # search 버튼 클릭
+    driver.find_elements_by_css_selector('button#btnbasicsearch')[0].click()
 
 
 #%%
+yearlist = [_ for _ in range(1927, 2021, 1)]
+yearlist.remove(1933)
 
 
-
-
+year = []
 prizename = []
 nominationstatement = []
-films = []
+filmtitle = []
 win = []
 charactor = []
 songtitle = []
+publicnote = []
+Ccodetyp = []
 
-dom = BeautifulSoup(driver.page_source, 'html.parser')
-for prize in dom.select('div.result-subgroup.subgroup-awardcategory-chron'):
-    
-    # prize_name
-    pnm = prize.select_one('.result-subgroup-title').text.strip()
-    print(f'prize name : {pnm}')
 
-    
-    nominationst = ''
-    film_title = ''
-    chrt = ''
-    songt = ''
-    
-    
-    # 후보 구분자 class : actingorsimilar : 후보이름(사람)-상영작 {작품이름}의 경우, 각 candidate구분자
-    if prize.select('.result-details.awards-result-actingorsimilar'):
-        print('actingorsimilar 유형\n')
+
+for yy in yearlist:
+    driver.get(url)
+    move_year(str(yy))
+    dom = BeautifulSoup(driver.page_source, 'html.parser')
+    for prize in dom.select('div.result-subgroup.subgroup-awardcategory-chron'):
         
-        # 후보들 for문
-        for candidate in prize.select('.result-details.awards-result-actingorsimilar'):
+        # prize_name
+        pnm = prize.select_one('.result-subgroup-title').text.strip()
+        print(f'prize name : {pnm}')
+    
 
-            # nomination statement ex) 최우식
-            nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
-            print(f'nominationstatement : {nominationst}')
-
-            # film info1 ex) Parasite
-            film_title = candidate.select_one('.awards-result-film').text.strip()
-            print(f'film_title : {film_title}')
-
-            # character ex) 기우역
-            if candidate.select_one('.awards-result-character'):
-                chrt = candidate.select_one('.awards-result-character').text.strip()
-                print(f'character : {chrt}')
+        nominationst = ''
+        film_title = ''
+        chrt = ''
+        songt = ''
+        pnote = ''
+        
+        
+        # 후보 구분자 class : actingorsimilar : 후보이름(사람)-상영작 {작품이름}의 경우, 각 candidate구분자
+        if prize.select('.result-details.awards-result-actingorsimilar'):
+            print('actingorsimilar 유형\n')
             
-            # winner 여부
-            if candidate.select_one('span'):
-                winornot = 1
-                print('winner+++++++++')
-            else:
-                winornot = 0
+            # 후보들 for문
+            for candidate in prize.select('.result-details.awards-result-actingorsimilar'):
+    
+                # nomination statement ex) 최우식
+                if candidate.select_one('.awards-result-nominationstatement'):
+                    nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
+                    print(f'nominationstatement : {nominationst}')
+    
+                # film title ex) Parasite 여러개인 경우도 있음
+                if candidate.select('.awards-result-film-title'):
+                    film_title = ' '.join([fts.text.strip() for fts in candidate.select('.awards-result-film-title')])
+                    print(f'film_title : {film_title}')
+    
+                # character ex) 기우역
+                if candidate.select_one('.awards-result-character'):
+                    chrt = candidate.select_one('.awards-result-character').text.strip()
+                    print(f'character : {chrt}')
                 
-            prizename.append(pnm)
-            nominationstatement.append(nominationst)
-            films.append(film_title)
-            charactor.append(chrt)
-            songtitle.append(songt)
-            win.append(winornot)
-
-
-            print()
-
-        
-    # 후보 구분자 class : other : 작품이름-사람이름의 경우, 각 candidate구분자
-    elif prize.select('.result-details.awards-result-other'):
-        print('other 유형\n')
-        
-        # 후보들 for문
-        for candidate in prize.select('.result-details.awards-result-other'):
-            
-            # nomination statement
-            nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
-            print(f'nominationstatement : {nominationst}')
-            
-            # film_title
-            film_title = candidate.select_one('.awards-result-film a').text.strip()
-            print(f'film_title : {film_title}')
-
-            # winner 여부
-            if candidate.select_one('span'):
-                winornot = 1
-                print('winner+++++++++')
-            else:
-                winornot = 0
+                # publicnote
+                if candidate.select_one('.awards-result-publicnote'):
+                    pnote = candidate.select_one('.awards-result-publicnote').text.strip()
+                    print(f'publicnote : {pnote}')
                 
-            print()
-            
-            prizename.append(pnm)
-            nominationstatement.append(nominationst)
-            films.append(film_title)
-            charactor.append(chrt)
-            songtitle.append(songt)
-            win.append(winornot)
+                # winner 여부
+                if candidate.select_one('span'):
+                    winornot = 1
+                    print('winner+++++++++')
+                else:
+                    winornot = 0
+                    
+                candidate_codetype = 'actingorsimilar'
+                    
+                year.append(yy)
+                prizename.append(pnm)
+                nominationstatement.append(nominationst)
+                filmtitle.append(film_title)
+                charactor.append(chrt)
+                songtitle.append(songt)
+                publicnote.append(pnote)
+                Ccodetyp.append(candidate_codetype)
+                win.append(winornot)
     
-    # 후보 구분자 class : song (주제가상)
-    elif prize.select('.result-details.awards-result-song'):
-        print('song 유형\n')
-        
-        # 후보들 for문
-        for candidate in prize.select('.result-details.awards-result-song'):
+    
+                print()
+    
             
-            # nomination statement
-            nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
-            print(f'nominationstatement : {nominationst}')
+        # 후보 구분자 class : other : 작품이름-사람이름의 경우, 각 candidate구분자
+        elif prize.select('.result-details.awards-result-other'):
+            print('other 유형\n')
             
-            # film_title
-            film_title = candidate.select_one('.awards-result-film a').text.strip()
-            print(f'film_title : {film_title}')
-            
-            # song title
-            songt = candidate.select_one('.awards-result-songtitle').text.strip()
-            print(f'song_title : {songt}')
-            
-            # winner 여부
-            if candidate.select_one('span'):
-                winornot = 1
-                print('winner+++++++++')
-            else:
-                winornot = 0
+            # 후보들 for문
+            for candidate in prize.select('.result-details.awards-result-other'):
                 
-            prizename.append(pnm)
-            nominationstatement.append(nominationst)
-            films.append(film_title)
-            charactor.append(chrt)
-            songtitle.append(songt)
-            win.append(winornot)
+                # nomination statement
+                if candidate.select_one('.awards-result-nominationstatement'):
+                    nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
+                    print(f'nominationstatement : {nominationst}')
                 
-            print()
+                # film title ex) Parasite 여러개인 경우도 있음
+                if candidate.select('.awards-result-film-title'):
+                    film_title = ' '.join([fts.text.strip() for fts in candidate.select('.awards-result-film-title')])
+                    print(f'film_title : {film_title}')
+
+                # publicnote
+                if candidate.select_one('.awards-result-publicnote'):
+                    pnote = candidate.select_one('.awards-result-publicnote').text.strip()
+                    print(f'publicnote : {pnote}')
+
+                # winner 여부
+                if candidate.select_one('span'):
+                    winornot = 1
+                    print('winner+++++++++')
+                else:
+                    winornot = 0
+                    
+                candidate_codetype = 'other'
+                
+                print()
+                year.append(yy)
+                prizename.append(pnm)
+                nominationstatement.append(nominationst)
+                filmtitle.append(film_title)
+                charactor.append(chrt)
+                songtitle.append(songt)
+                publicnote.append(pnote)
+                Ccodetyp.append(candidate_codetype)
+                win.append(winornot)
         
-        
-        
-        
-        
-        
-        
-    print('***********************************')
+        # 후보 구분자 class : song (주제가상)
+        elif prize.select('.result-details.awards-result-song'):
+            print('song 유형\n')
+            
+            # 후보들 for문
+            for candidate in prize.select('.result-details.awards-result-song'):
+                
+                # nomination statement
+                if candidate.select_one('.awards-result-nominationstatement'):
+                    nominationst = candidate.select_one('.awards-result-nominationstatement').text.strip()
+                    print(f'nominationstatement : {nominationst}')
+                
+                # film title ex) Parasite 여러개인 경우도 있음
+                if candidate.select('.awards-result-film-title'):
+                    film_title = ' '.join([fts.text.strip() for fts in candidate.select('.awards-result-film-title')])
+                    print(f'film_title : {film_title}')
+                
+                # song title
+                songt = candidate.select_one('.awards-result-songtitle').text.strip()
+                print(f'song_title : {songt}')
+
+                # publicnote
+                if candidate.select_one('.awards-result-publicnote'):
+                    pnote = candidate.select_one('.awards-result-publicnote').text.strip()
+                    print(f'publicnote : {pnote}')
+
+                # winner 여부
+                if candidate.select_one('span'):
+                    winornot = 1
+                    print('winner+++++++++')
+                else:
+                    winornot = 0
+                    
+                candidate_codetype = 'song'
+                    
+                    
+                year.append(yy)
+                prizename.append(pnm)
+                nominationstatement.append(nominationst)
+                filmtitle.append(film_title)
+                charactor.append(chrt)
+                songtitle.append(songt)
+                publicnote.append(pnote)
+                Ccodetyp.append(candidate_codetype)
+                win.append(winornot)
+                    
+                print()
+            
+            
+            
+            
+            
+            
+            
+        print('***********************************')
 
 
 #%%
 df = pd.DataFrame({
+    'year': year,
     'prizename': prizename,
     'nominationstatement': nominationstatement,
-    'films': films,
+    'films': filmtitle,
     'charactor': charactor,
     'songtitle': songtitle,
+    'publicnote': publicnote,
+    'Ccodetyp': Ccodetyp,
     'win': win
 })
 
 
-#%%
+#%%actingorsimilar 유형
 
 # box = prize
 <div class="result-subgroup subgroup-awardcategory-chron">
@@ -242,12 +283,13 @@ df = pd.DataFrame({
     # candidate
     <div class="awards-result-subgroup-items">
         
-        # 수상작일때
-        <span class="glyphicon glyphicon-star" title="Winner"></span>
-    
     
         # 후보1
-        <div class="result-details awards-result-actingorsimilar">------------------------------
+        <div class="result-details awards-result-actingorsimilar">------------------------------후보 구분자
+        
+            # 수상작일때
+            <span class="glyphicon glyphicon-star" title="Winner"></span>
+        
         
             # 후보1의 정보들***************************************************************
             <div class="awards-result-nomination awards-result-nomination-actingorsimilar">
@@ -268,6 +310,8 @@ df = pd.DataFrame({
                 
             </div>
             # 후보1의 정보들***************************************************************
+            
+            <"publicnote">
             
         </div>--------------------------------------------------------------------------------
         # 후보1
@@ -293,7 +337,7 @@ df = pd.DataFrame({
     </div>
 <div>
 
-#%%
+#%% other 유형
 Animated Feature film
 
 # box = prize
