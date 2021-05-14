@@ -20,6 +20,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import re
 import pandas as pd
+import pickle
 
 #%% 켜기, 초기화
 # driver.close()
@@ -147,11 +148,10 @@ for yy in yearlist:
                 publicnote.append(pnote)
                 Ccodetyp.append(candidate_codetype)
                 win.append(winornot)
-    
-    
+
                 print()
     
-            
+
         # 후보 구분자 class : other : 작품이름-사람이름의 경우, 각 candidate구분자
         elif prize.select('.result-details.awards-result-other'):
             print('other 유형\n')
@@ -241,15 +241,9 @@ for yy in yearlist:
                 win.append(winornot)
                     
                 print()
-            
-            
-            
-            
-            
-            
+
             
         print('***********************************')
-
 
 #%%
 df = pd.DataFrame({
@@ -263,6 +257,10 @@ df = pd.DataFrame({
     'Ccodetyp': Ccodetyp,
     'win': win
 })
+#%%
+data_PATH
+df.to_csv(data_PATH + 'academy.csv', encoding='utf-8-sig')
+
 
 
 #%%actingorsimilar 유형
