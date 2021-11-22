@@ -1,4 +1,4 @@
-# MyMovieRecommendSystem
+# MyMovieRecommendSystem 개인프로젝트
 
 
 
